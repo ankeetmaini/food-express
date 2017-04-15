@@ -56,3 +56,19 @@ In this tutorial we'll create an awesome app to track realtime location of our f
   });
 }());
 ```
+
+## Step 1: Capture device's location
+- We'll use Web's [Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/Using_geolocation) to get the user's location on start-up
+- With this code, we get the location and center the map. See we're already into personalized experience!
+
+```js
+// get the location via Geolocation API
+if ('geolocation' in navigator) {
+  var currentLocation = navigator.geolocation.getCurrentPosition(function (position) {
+    map.setCenter({
+      lat: position.coords.latitude,
+      lng: position.coords.longitude
+    });
+  });
+}
+```
