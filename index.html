@@ -11,6 +11,18 @@
       <h1>Track Your Friends!</h1>
     </div>
     <div class="container">
+      <div id="name-box" class="name-box">
+        <h3>What would you like to be known as?</h3>
+        <input id="name" type="text" placeholder="e.g. Darth Vader">
+        <button id="saveNameButton">Save</button>
+      </div>
+
+      <div id="friends-box" class="name-box hidden">
+        <h3 id="welcome-message"></h3>
+        <input id="friendName" type="text" placeholder="e.g. Shelly">
+        <h4 id="friends-list"></h4>
+      </div>
+
       <div id="map"></div>
     </div>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCmB2FdQCnwAPqxooE2UyfMnlfI_EHuj6M"></script>

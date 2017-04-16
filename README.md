@@ -72,3 +72,56 @@ if ('geolocation' in navigator) {
   });
 }
 ```
+
+## Step 2: Capture _username_
+- It's important to capture a _username_ to identify users on the map
+- Let's code a `div` which will take input and store it in-memory.
+- Add the following code in `index.html`
+
+```html
+<div id="name-box" class="name-box">
+  <h3>What would you like to be known as?</h3>
+  <input id="name" type="text" placeholder="e.g. Darth Vader">
+  <button id="saveNameButton">Save</button>
+</div>
+
+<div id="friends-box" class="name-box hidden">
+  <h3 id="welcome-message"></h3>
+  <input id="friendName" type="text" placeholder="e.g. Shelly">
+  <h4 id="friends-list"></h4>
+</div>
+```
+
+- And some JavaScript to get the name
+
+```js
+var username;
+
+// reference for DOM nodes
+var saveNameButton = document.getElementById('saveNameButton');
+var saveNameBox = document.getElementById('name-box');
+var nameInput = document.getElementById('name');
+var welcomeHeading = document.getElementById('welcome-message');
+var friendsBox = document.getElementById('friends-box');
+
+saveNameButton.addEventListener('click', saveName);
+
+// all functions, event handlers
+function saveName (e) {
+  var input = nameInput.value;
+  if (input && input.trim()) {
+    username = input;
+
+    // hide the name box
+    saveNameBox.classList.add('hidden');
+
+    // set the name
+    welcomeHeading.innerHTML = 'Hi! <strong>' + username + '</strong>, who would you like to track today?';
+    // show the friend's div now
+    friendsBox.classList.remove('hidden');
+  }
+  return;
+}
+```
+
+- Take a look at the latest version of our `app.js`
