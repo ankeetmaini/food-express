@@ -1,0 +1,17 @@
+{
+  "name": "pusher-realtime-map",
+  "version": "1.0.0",
+  "description": "In this tutorial we'll create an awesome app to track realtime location of our friends!",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Ankeet Maini",
+  "license": "ISC",
+  "devDependencies": {
+    "body-parser": "^1.17.1",
+    "express": "^4.15.2",
+    "pusher": "^1.5.1"
+  }
+}
