@@ -9,7 +9,7 @@
   },
   "author": "Ankeet Maini",
   "license": "ISC",
-  "devDependencies": {
+  "dependencies": {
     "body-parser": "^1.17.1",
     "express": "^4.15.2",
     "pusher": "^1.5.1"
