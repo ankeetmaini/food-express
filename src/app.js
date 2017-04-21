@@ -7,11 +7,15 @@
   var nameInput = document.getElementById('name');
   var welcomeHeading = document.getElementById('welcome-message');
   var friendsBox = document.getElementById('friends-box');
+  var friendsAddButton = document.getElementById('addFriendButton');
+  var friendNameInput = document.getElementById('friendName');
+  var friendsList = document.getElementById('friends-list');
 
   // handy variables
   var locationWatcher;
   var myLastKnownLocation;
   var sendLocationInterval;
+  var friendsLocationMap = {};
 
   // load the map
   map = new google.maps.Map(document.getElementById('map'), {
@@ -23,11 +27,13 @@
   if ('geolocation' in navigator) {
     var currentLocation = navigator.geolocation.getCurrentPosition(function (position) {
       // save my last location
-      myLastKnownLocation = position;
-      map.setCenter({
+      var location = {
         lat: position.coords.latitude,
         lng: position.coords.longitude
-      });
+      };
+
+      myLastKnownLocation = location;
+      map.setCenter(location);
     });
   }
 
@@ -39,6 +45,7 @@
 
   // add eventlisteners
   saveNameButton.addEventListener('click', saveName);
+  friendsAddButton.addEventListener('click', addFriend);
 
   // all functions, event handlers
   function saveName (e) {
@@ -60,10 +67,55 @@
     return;
   }
 
-  function triggerLocationChangeEvents (channel, position) {
+  function addFriend (e) {
+    var friendName = friendNameInput.value;
+    // if already present return
+    if (friendsLocationMap[friendName]) return;
+    if (friendName) {
+      var friendChannelName = 'private-' + friendName;
+      var friendChannel = pusher.subscribe(friendChannelName);
+      friendChannel.bind('client-location', function (nextLocation) {
+        // first save the location
+        // bail if location is same
+        var prevLocation = friendsLocationMap[friendName] || {};
+        friendsLocationMap[friendName] = nextLocation;
+        showFriendOnMap(friendName, false, true, prevLocation);
+      });
+    }
+
+    // add the name to the list
+    var friendTrackButton = document.createElement('button');
+    friendTrackButton.classList.add('small');
+    friendTrackButton.innerHTML = friendName;
+    friendTrackButton.addEventListener('click', showFriendOnMap.bind(null, friendName, true, false, {}));
+    friendsList.appendChild(friendTrackButton);
+  }
+
+  function showFriendOnMap (friendName, center, addMarker, prevLocation) {
+    if (!friendsLocationMap[friendName]) return;
+    // first center the map
+    if (center) map.setCenter(friendsLocationMap[friendName]);
+    var nextLocation = friendsLocationMap[friendName];
+    
+    // add a marker
+    if ((prevLocation.lat === nextLocation.lat) && (prevLocation.lng === nextLocation.lng)) {
+      return;
+    }
+    
+    if (addMarker) {
+      var marker = new google.maps.Marker({
+        position: friendsLocationMap[friendName],
+        map: map,
+        label: friendName,
+        animation: google.maps.Animation.BOUNCE,
+      });
+    }
+  }
+
+  function triggerLocationChangeEvents (channel, location) {
     // update myLastLocation
-    myLastKnownLocation = position;
-    channel.trigger('client-location', { position: position });
+    myLastKnownLocation = location;
+    channel.trigger('client-location', location);
   }
 
   function createMyLocationChannel (name) {
@@ -73,14 +125,17 @@
       // use the watchPosition API to watch the changing location
       // and trigger events with new coordinates
       locationWatcher = navigator.geolocation.watchPosition(function(position) {
-        triggerLocationChangeEvents(myLocationChannel, position);
+        var location = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        triggerLocationChangeEvents(myLocationChannel, location);
       });
 
       // also start a setInterval to keep sending the loction every 5 secs
       sendLocationInterval = setInterval(function () {
-        console.log(myLastKnownLocation);
         // not using `triggerLocationChangeEvents` to keep the pipes different
-        myLocationChannel.trigger('client-location', { position: myLastKnownLocation })
+        myLocationChannel.trigger('client-location', myLastKnownLocation)
       }, 5000);
     });
   }

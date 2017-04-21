@@ -126,7 +126,7 @@ function saveName (e) {
 
 - Take a look at the latest version of our `app.js`
 
-## Step 3: Set up tracking logic
+## Step 3: Set up tracking logic, send events on location change
 - To **track locations of our friends** we'll use [Pusher's real time capabilities](https://pusher.com/). We'll trigger events whenever we change our location and also at the same time listen for location change events of our friends.
 - [Signup for Pusher](https://pusher.com/signup), or [Login](https://dashboard.pusher.com/accounts/sign_in) if you already have an account.
 - Once you login, create an app by giving an `app-name` and choosing a `cluster` in the _Create App_ screen
@@ -224,4 +224,80 @@ function triggerLocationChangeEvents (channel, position) {
 }
 ```
 
+## Step 4: Subscribe to Friend's location channels
+
+- First up, code a div in `index.html` to enter friend's username.
+
+```html
+<div id="friends-box" class="name-box hidden">
+  <h3 id="welcome-message"></h3>
+  <h4 id="friends-list"></h4>
+  <input id="friendName" type="text" placeholder="e.g. Shelly">
+  <button id="addFriendButton">Add</button>
+</div>
+```
+
+- Let's make the button functional by adding an event listener on it
+
+```js
+friendsAddButton.addEventListener('click', addFriend);
+```
+
+- So everytime you add a username, `addFriend` function would get called.
+
+```js
+function addFriend (e) {
+  var friendName = friendNameInput.value;
+  // if already present return
+  if (friendsLocationMap[friendName]) return;
+  if (friendName) {
+    var friendChannelName = 'private-' + friendName;
+    var friendChannel = pusher.subscribe(friendChannelName);
+    friendChannel.bind('client-location', function (nextLocation) {
+      // first save the location
+      // bail if location is same
+      var prevLocation = friendsLocationMap[friendName] || {};
+      friendsLocationMap[friendName] = nextLocation;
+      showFriendOnMap(friendName, false, true, prevLocation);
+    });
+  }
+
+  // add the name to the list
+  var friendTrackButton = document.createElement('button');
+  friendTrackButton.classList.add('small');
+  friendTrackButton.innerHTML = friendName;
+  friendTrackButton.addEventListener('click', showFriendOnMap.bind(null, friendName, true, false, {}));
+  friendsList.appendChild(friendTrackButton);
+}
+```
+
+- In the above code, we first `subscribe` to the `private` Pusher channel of the friend. And listen to all the events triggered on that channel
+- Each new event contains the latest location and we save that in an object to retrieve later.
+- Also we take the help of another function to plot the location on a map, `showFriendOnMap`
+
+```js
+function showFriendOnMap (friendName, center, addMarker, prevLocation) {
+  if (!friendsLocationMap[friendName]) return;
+  // first center the map
+  if (center) map.setCenter(friendsLocationMap[friendName]);
+  var nextLocation = friendsLocationMap[friendName];
+  
+  // add a marker
+  if ((prevLocation.lat === nextLocation.lat) && (prevLocation.lng === nextLocation.lng)) {
+    return;
+  }
+  
+  if (addMarker) {
+    var marker = new google.maps.Marker({
+      position: friendsLocationMap[friendName],
+      map: map,
+      label: friendName,
+      animation: google.maps.Animation.BOUNCE,
+    });
+  }
+}
+
+```
+
+- The above function adds a marker at the new location on the map, and bails if the new location is same as previous location.
 
