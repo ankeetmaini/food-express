@@ -16,6 +16,7 @@
   var myLastKnownLocation;
   var sendLocationInterval;
   var friendsLocationMap = {};
+  var friendsMarkerMap = {};
 
   // load the map
   map = new google.maps.Map(document.getElementById('map'), {
@@ -103,12 +104,14 @@
     }
     
     if (addMarker) {
-      var marker = new google.maps.Marker({
-        position: friendsLocationMap[friendName],
+      var marker = friendsMarkerMap[friendName];
+      marker = marker || new google.maps.Marker({
         map: map,
         label: friendName,
         animation: google.maps.Animation.BOUNCE,
       });
+      marker.setPosition(friendsLocationMap[friendName]);
+      friendsMarkerMap[friendName] = marker;
     }
   }
 
