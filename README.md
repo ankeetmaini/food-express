@@ -1,6 +1,12 @@
-# Realtime Tracking on Google
+# How To Track Friends Realtime with Pusher and Google Maps
 
-In this tutorial we'll create an awesome app to track realtime location of our friends!
+In this tutorial we'll create an awesome app to track realtime location of our friends! We'll see how not only we can track their location but also follow their location in realtime. You can use this small app to see which of your friends might get late to your party and who is still lying that he has already left!
+
+This post demonstrates how easy it is to use realtime capabilities of Pusher and dead simple to integrate with Google Maps JavaScript APIs to create a real-world tracking utility, be it an e-commerce parcel tracking or tracking your food delivery or a FEDEX package!
+
+To give you a sneak peak this is how our app will look at the end of this post.
+
+![](https://dl.dropboxusercontent.com/s/hz3janocdsskuyw/how-to-track-friends-realtime-all.gif)
 
 ## Step 0: Setting up our app
 - Start of by creating an `index.html` with this code snippet.
@@ -56,6 +62,8 @@ In this tutorial we'll create an awesome app to track realtime location of our f
   });
 }());
 ```
+
+![](https://dl.dropboxusercontent.com/s/lzxumc1dfs9a69h/how-to-track-friends-realtime-login.jpeg)
 
 ## Step 1: Capture device's location
 - We'll use Web's [Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/Using_geolocation) to get the user's location on start-up
@@ -118,6 +126,7 @@ function saveName (e) {
   return;
 }
 ```
+![](https://dl.dropboxusercontent.com/s/lnz8c06vidvw0si/how-to-track-friends-realtime-opening.jpeg)
 
 - Take a look at the latest version of our [app.js](https://github.com/ankeetmaini/track-friends/blob/59b48ad8a51b8b42f89100ca3446ce78a6bca6db/src/app.js)
 
@@ -239,6 +248,8 @@ function triggerLocationChangeEvents (channel, location) {
 </div>
 ```
 
+![](https://dl.dropboxusercontent.com/s/xgi7jed6fkj00qg/how-to-track-friends-realtime-matt.jpeg)
+
 - Let's make the button functional by adding an event listener on it
 
 ```js
@@ -330,6 +341,9 @@ function showFriendOnMap (friendName, center, addMarker, prevLocation) {
 - Now that you've learned how to track a friend in the above step, we can do it for multiple people
 - Notice that we are also adding a button(`friendTrackButton`) for all the friends that we add via the textbox
 - On clicking that button we'll center the screen with the last known location of that friend.
+
+![](https://dl.dropboxusercontent.com/s/54syazt18blkuhw/how-to-track-friends-realtime-gary.jpeg) ![](https://dl.dropboxusercontent.com/s/aj6wewmja86qebb/how-to-track-friends-realtime-dorothy.jpeg)
+
 
 ## Next Steps
 - Since we're using the awesome concept of Pusher Channels, we can easily build on top of it to track anything, friends, food parcel, or an e-commerce delivery
