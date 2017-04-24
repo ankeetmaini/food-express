@@ -3,8 +3,8 @@
 In this tutorial we'll create an awesome app to track realtime location of our friends!
 
 ## Step 0: Setting up our app
-- Start of by creating our `index.html` with this code snippet.
-- Our humble [`index.html`](https://link.to.github) doesn't do much except including a `meta` tag in the `head` section so that our app looks crisp and works great in mobile browsers as well and includes a JavaScript file in `src` directory.
+- Start of by creating an `index.html` with this code snippet.
+- Our humble [`index.html`](https://github.com/ankeetmaini/track-friends/blob/master/index.html) doesn't do much except including a `meta` tag in the `head` section so that our app looks crisp and works great in mobile browsers as well.
 
 ```html
 <!DOCTYPE html>
@@ -85,11 +85,6 @@ if ('geolocation' in navigator) {
   <button id="saveNameButton">Save</button>
 </div>
 
-<div id="friends-box" class="name-box hidden">
-  <h3 id="welcome-message"></h3>
-  <input id="friendName" type="text" placeholder="e.g. Shelly">
-  <h4 id="friends-list"></h4>
-</div>
 ```
 
 - And some JavaScript to get the name
@@ -124,13 +119,13 @@ function saveName (e) {
 }
 ```
 
-- Take a look at the latest version of our `app.js`
+- Take a look at the latest version of our [app.js](https://github.com/ankeetmaini/track-friends/blob/59b48ad8a51b8b42f89100ca3446ce78a6bca6db/src/app.js)
 
 ## Step 3: Set up tracking logic, send events on location change
 - To **track locations of our friends** we'll use [Pusher's real time capabilities](https://pusher.com/). We'll trigger events whenever we change our location and also at the same time listen for location change events of our friends.
 - [Signup for Pusher](https://pusher.com/signup), or [Login](https://dashboard.pusher.com/accounts/sign_in) if you already have an account.
 - Once you login, create an app by giving an `app-name` and choosing a `cluster` in the _Create App_ screen
-- Now that we've registered and created the app, add the `pusher's JavaScript library` in your `index.html`
+- Now that we've registered and created the app, add `Pusher's JavaScript library` in your `index.html`
 
 ```html
 <script src="https://js.pusher.com/4.0/pusher.min.js"></script>
@@ -146,7 +141,7 @@ var pusher = new Pusher('<INSERT_PUSHER_APP_KEY_HERE>', {
 ```
 
 - Next, we need to start triggering events when our location changes, so that other people can track us.
-- While we'll trigger events for our location change, we need to secure these events so that only intended recipients can track us. We;ll accomplish this by using [Pusher's Channel comcept](https://pusher.com/docs/client_api_guide/client_channels)
+- While we'll trigger events for our location change, we need to secure these events so that only intended recipients can track us. We'll accomplish this by using [Pusher's Channel concept](https://pusher.com/docs/client_api_guide/client_channels)
 - [Channels](https://pusher.com/docs/client_api_guide/client_channels) are a way to filter and secure events. In our app each user will be represented as a `channel`. We'll be using Pusher's [Private Channels](https://pusher.com/docs/client_api_guide/client_private_channels)
 
 ```js
@@ -154,7 +149,7 @@ var myLocationChannel = pusher.subscribe('private-<USERNAME>');
 ```
 - A `channel` will be named after the username chosen by the user, and with this name other people can subscribe and listen the location change events for a particular user.
 - To use private channels, you must be authenticated. [Pusher makes writing an auth server very easy](https://pusher.com/docs/authenticating_users#authEndpoint). I used their NodeJS template [here](https://pusher.com/docs/authenticating_users#implementing_private_endpoints).
-- My `server.js` looks like this
+- My [server.js](https://github.com/ankeetmaini/track-friends/blob/master/server.js) looks like this
 
 ```js
 var express = require('express');
@@ -189,38 +184,45 @@ app.listen(port, () => console.log('Listening at http://localhost:5000'));
 - You need to enable `Client Events` in your `Settings` tab on [Pusher's Dashboard](https://dashboard.pusher.com/)
 - `Client Events` should start with `client-<YOUR_EVENT_NAME>`. (Note that `Client Events` have a number of restrictions that are important to know about while creating your awesome app. [Read more about them here.](https://pusher.com/docs/client_api_guide/client_events#trigger-events))
 - On startup we create a channel using the below code, and then send our client events to it everytime we change location
+- We'll also save the last location in an object (`myLastKnownLocation`) for later retrieval
 
 ```js
 function createMyLocationChannel (name) {
-  var myLocationChannel = pusher.subscribe('private' + name);
+  var myLocationChannel = pusher.subscribe('private-' + name);
   myLocationChannel.bind('pusher:subscription_succeeded', function() {
     // safe to now trigger events
     // use the watchPosition API to watch the changing location
     // and trigger events with new coordinates
     locationWatcher = navigator.geolocation.watchPosition(function(position) {
-      triggerLocationChangeEvents(myLocationChannel, position);
+      var location = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+      triggerLocationChangeEvents(myLocationChannel, location);
     });
-  });
-}
 
-function triggerLocationChangeEvents (channel, position) {
-  channel.trigger('client-location', { position: position });
+    // also start a setInterval to keep sending the loction every 5 secs
+    sendLocationInterval = setInterval(function () {
+      // not using `triggerLocationChangeEvents` to keep the pipes different
+      myLocationChannel.trigger('client-location', myLastKnownLocation)
+    }, 5000);
+  });
 }
 ```
 
 - Also to handle the case when the user isn't moving, we add a `setInterval` to keep sending the last captured location. So that our friends can track our last location, instead of disappearing from the map!
 
 ```js
-sendLocationInterval = setInterval(function () {
-  // not using `triggerLocationChangeEvents` to keep the pipes different
-  channel.trigger('client-location', { position: myLastKnownLocation })
-}, 2000);
+ sendLocationInterval = setInterval(function () {
+    // not using `triggerLocationChangeEvents` to keep the pipes different
+    myLocationChannel.trigger('client-location', myLastKnownLocation)
+  }, 5000);
 
 // also update myLastKnownLocation everytime we trigger an event
-function triggerLocationChangeEvents (channel, position) {
+function triggerLocationChangeEvents (channel, location) {
   // update myLastLocation
-  myLastKnownLocation = position;
-  channel.trigger('client-location', { position: position });
+  myLastKnownLocation = location;
+  channel.trigger('client-location', location);
 }
 ```
 
@@ -269,9 +271,29 @@ function addFriend (e) {
   friendTrackButton.addEventListener('click', showFriendOnMap.bind(null, friendName, true, false, {}));
   friendsList.appendChild(friendTrackButton);
 }
+
 ```
 
-- In the above code, we first `subscribe` to the `private` Pusher channel of the friend. And listen to all the events triggered on that channel
+- In the above code, we first `subscribe` to the `private` Pusher channel of the friend.
+
+```js
+var friendChannelName = 'private-' + friendName;
+var friendChannel = pusher.subscribe(friendChannelName);
+```
+
+- And listen to all the events triggered on that channel
+
+```js
+friendChannel.bind('client-location', function (nextLocation) {
+  // first save the location
+  // bail if location is same
+  var prevLocation = friendsLocationMap[friendName] || {};
+  friendsLocationMap[friendName] = nextLocation;
+  showFriendOnMap(friendName, false, true, prevLocation);
+});
+```
+- We keep the `event name`, same i.e. `client-location` as every user has a distinct channels.
+- Read more about keeping the data private [here](https://pusher.com/docs/client_api_guide/client_channels).
 - Each new event contains the latest location and we save that in an object to retrieve later.
 - Also we take the help of another function to plot the location on a map, `showFriendOnMap`
 
@@ -288,16 +310,47 @@ function showFriendOnMap (friendName, center, addMarker, prevLocation) {
   }
   
   if (addMarker) {
-    var marker = new google.maps.Marker({
-      position: friendsLocationMap[friendName],
+    var marker = friendsMarkerMap[friendName];
+    marker = marker || new google.maps.Marker({
       map: map,
       label: friendName,
       animation: google.maps.Animation.BOUNCE,
     });
+    marker.setPosition(friendsLocationMap[friendName]);
+    friendsMarkerMap[friendName] = marker;
   }
 }
-
 ```
-
 - The above function adds a marker at the new location on the map, and bails if the new location is same as previous location.
+- Also if we're already tracking a friend, it updates the new location in the same marker.
+- So that if the person is moving, you can see the marker moving on the map realtime. ZOMG! I KNOW! :D
+
+## Step 5: Tracking multiple friends, all at once
+
+- Now that you've learned how to track a friend in the above step, we can do it for multiple people
+- Notice that we are also adding a button(`friendTrackButton`) for all the friends that we add via the textbox
+- On clicking that button we'll center the screen with the last known location of that friend.
+
+## Next Steps
+- Since we're using the awesome concept of Pusher Channels, we can easily build on top of it to track anything, friends, food parcel, or an e-commerce delivery
+- Also, Google Maps API integration is a piece-of-cake.
+
+## PS: [Pusher's realtime capability FTW!](https://pusher.com/)
+
+## Running locally
+
+- clone the repository
+ 
+``` bash
+  git clone git@github.com:ankeetmaini/track-friends.git
+  cd track-friends
+  npm install
+  npm start
+```
+- open [http://localhost:5000](http://localhost:5000)
+ 
+## Show me the code
+
+- Code is hosted on GitHub [track-friends](https://github.com/ankeetmaini/track-friends)
+ 
 
