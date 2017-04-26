@@ -39,8 +39,8 @@
   }
 
   // initialize pusher
-  var pusher = new Pusher('8f678e8983ef10e35ec1', {
-    cluster: 'ap2',
+  var pusher = new Pusher('INSERT_YOUR_PUSHER_KEY', {
+    cluster: 'INSERT_YOUR_CLUSTER',
     encrypted: true
   });
 
