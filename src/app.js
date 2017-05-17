@@ -6,17 +6,20 @@
   var saveNameBox = document.getElementById('name-box');
   var nameInput = document.getElementById('name');
   var welcomeHeading = document.getElementById('welcome-message');
-  var friendsBox = document.getElementById('friends-box');
-  var friendsAddButton = document.getElementById('addFriendButton');
-  var friendNameInput = document.getElementById('friendName');
-  var friendsList = document.getElementById('friends-list');
+  var deliveryHeroBox = document.getElementById('delivery-hero-box');
+  var deliveryHeroesAddButton = document.getElementById('addDeliveryHeroButton');
+  var deliveryHeroNameInput = document.getElementById('deliveryHeroName');
+  var deliveryHeroesList = document.getElementById('delivery-heroes-list');
 
   // handy variables
   var locationWatcher;
   var myLastKnownLocation;
   var sendLocationInterval;
-  var friendsLocationMap = {};
-  var friendsMarkerMap = {};
+  var deliveryHeroesLocationMap = {};
+  var deliveryHeroesMarkerMap = {};
+
+  // mode - user's or delivery guy's
+  var mode = getUrlParameter('mode') || 'user';
 
   // load the map
   map = new google.maps.Map(document.getElementById('map'), {
@@ -46,7 +49,7 @@
 
   // add eventlisteners
   saveNameButton.addEventListener('click', saveName);
-  friendsAddButton.addEventListener('click', addFriend);
+  deliveryHeroesAddButton.addEventListener('click', addDeliveryHero);
 
   // all functions, event handlers
   function saveName (e) {
@@ -58,9 +61,12 @@
       saveNameBox.classList.add('hidden');
 
       // set the name
-      welcomeHeading.innerHTML = 'Hi! <strong>' + username + '</strong>, who would you like to track today?';
-      // show the friend's div now
-      friendsBox.classList.remove('hidden');
+      welcomeHeading.innerHTML = 'Hi! <strong>' + username +
+        (mode === 'user'
+          ? '</strong>, type in your Delivery Hero\'s name to track your food.' 
+          : '</strong>, type in the customer name to locate the address');
+      // show the delivery hero's div now
+      deliveryHeroBox.classList.remove('hidden');
 
       // create a private channel with the username
       createMyLocationChannel(username);
@@ -68,35 +74,35 @@
     return;
   }
 
-  function addFriend (e) {
-    var friendName = friendNameInput.value;
+  function addDeliveryHero (e) {
+    var deliveryHeroName = deliveryHeroNameInput.value;
     // if already present return
-    if (friendsLocationMap[friendName]) return;
-    if (friendName) {
-      var friendChannelName = 'private-' + friendName;
-      var friendChannel = pusher.subscribe(friendChannelName);
-      friendChannel.bind('client-location', function (nextLocation) {
+    if (deliveryHeroesLocationMap[deliveryHeroName]) return;
+    if (deliveryHeroName) {
+      var deliveryHeroChannelName = 'private-' + deliveryHeroName;
+      var deliveryHeroChannel = pusher.subscribe(deliveryHeroChannelName);
+      deliveryHeroChannel.bind('client-location', function (nextLocation) {
         // first save the location
         // bail if location is same
-        var prevLocation = friendsLocationMap[friendName] || {};
-        friendsLocationMap[friendName] = nextLocation;
-        showFriendOnMap(friendName, false, true, prevLocation);
+        var prevLocation = deliveryHeroesLocationMap[deliveryHeroName] || {};
+        deliveryHeroesLocationMap[deliveryHeroName] = nextLocation;
+        showDeliveryHeroOnMap(deliveryHeroName, false, true, prevLocation);
       });
     }
 
     // add the name to the list
-    var friendTrackButton = document.createElement('button');
-    friendTrackButton.classList.add('small');
-    friendTrackButton.innerHTML = friendName;
-    friendTrackButton.addEventListener('click', showFriendOnMap.bind(null, friendName, true, false, {}));
-    friendsList.appendChild(friendTrackButton);
+    var deliveryHeroTrackButton = document.createElement('button');
+    deliveryHeroTrackButton.classList.add('small');
+    deliveryHeroTrackButton.innerHTML = deliveryHeroName;
+    deliveryHeroTrackButton.addEventListener('click', showDeliveryHeroOnMap.bind(null, deliveryHeroName, true, false, {}));
+    deliveryHeroesList.appendChild(deliveryHeroTrackButton);
   }
 
-  function showFriendOnMap (friendName, center, addMarker, prevLocation) {
-    if (!friendsLocationMap[friendName]) return;
+  function showDeliveryHeroOnMap (deliveryHeroName, center, addMarker, prevLocation) {
+    if (!deliveryHeroesLocationMap[deliveryHeroName]) return;
     // first center the map
-    if (center) map.setCenter(friendsLocationMap[friendName]);
-    var nextLocation = friendsLocationMap[friendName];
+    if (center) map.setCenter(deliveryHeroesLocationMap[deliveryHeroName]);
+    var nextLocation = deliveryHeroesLocationMap[deliveryHeroName];
     
     // add a marker
     if ((prevLocation.lat === nextLocation.lat) && (prevLocation.lng === nextLocation.lng)) {
@@ -104,14 +110,14 @@
     }
     
     if (addMarker) {
-      var marker = friendsMarkerMap[friendName];
+      var marker = deliveryHeroesMarkerMap[deliveryHeroName];
       marker = marker || new google.maps.Marker({
         map: map,
-        label: friendName,
+        label: deliveryHeroName,
         animation: google.maps.Animation.BOUNCE,
       });
-      marker.setPosition(friendsLocationMap[friendName]);
-      friendsMarkerMap[friendName] = marker;
+      marker.setPosition(deliveryHeroesLocationMap[deliveryHeroName]);
+      deliveryHeroesMarkerMap[deliveryHeroName] = marker;
     }
   }
 
@@ -141,5 +147,13 @@
         myLocationChannel.trigger('client-location', myLastKnownLocation)
       }, 5000);
     });
+  }
+
+  // function to get a query param's value
+  function getUrlParameter(name) {
+    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+    var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+    var results = regex.exec(location.search);
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
   }
 }());
