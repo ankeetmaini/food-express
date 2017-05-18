@@ -42,8 +42,8 @@
   }
 
   // initialize pusher
-  var pusher = new Pusher('8f678e8983ef10e35ec1', {
-    cluster: 'ap2',
+  var pusher = new Pusher('INSERT_PUSHER_APP_KEY_HERE', {
+    cluster: 'INSERT_PUSHER_CLUSTER_HERE',
     encrypted: true
   });
 

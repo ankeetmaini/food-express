@@ -13,7 +13,7 @@ var pusher = new Pusher({
   appId: 'INSERT_YOUR_APP_ID_HERE',
   key: 'INSERT_YOUR_KEY_HERE',
   secret:  'INSERT_YOUR_SECRET_HERE',
-  cluster: '<INSERT_PUSHER_CLUSTER_HERE>'
+  cluster: 'INSERT_PUSHER_CLUSTER_HERE'
 });
 
 app.post('/pusher/auth', function(req, res) {

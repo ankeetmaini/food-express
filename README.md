@@ -375,6 +375,8 @@ function showDeliveryHeroOnMap (deliveryHeroName, center, addMarker, prevLocatio
   npm install
   npm start
 ```
+- Generate Pusher API keys and insert in `src/app.js` as well as `server.js`
+- Generate Google Maps API key and add in `index.html`
 
 - open [http://localhost:5000](http://localhost:5000) 
 
